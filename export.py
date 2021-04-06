@@ -85,7 +85,24 @@ def main() -> None:
                 dst_subject_id = src_subject_id_to_dst[src_ssa.subject_id]
                 dst_ssa = create_subject_study_arm(src_ssa, dst_subject_id,
                                                    dst_study_arm, k)
-                print(f'\t\tSBJ ARM {j}: {dst_ssa.patient_code}')
+                print(f'\t\tSBJ ARM: {dst_ssa.patient_code}')
+
+                az_histories = src.AlzheimerHistory.select().where(
+                    src.AlzheimerHistory.subject_study_arm_id ==
+                    src_ssa.subject_study_arm_id)
+
+                for src_az_hist in az_histories:
+                    dst_az_hist = create_alzheimer_history(
+                        src_az_hist, dst_ssa, dst_subject_id)
+                    print(f'\t\t\tAZHIST: {dst_az_hist.diagnosis}')
+
+                dispositions = src.SubjectDisposition.select().where(
+                    src.SubjectDisposition.subject_study_arm_id ==
+                    src_ssa.subject_study_arm_id)
+
+                for src_disp in dispositions:
+                    dst_disp = create_subject_disposition(src_disp, dst_ssa)
+                    print(f'\t\t\tDISP: {dst_disp.disposition}')
 
                 meds = src.SubjectMedication.select().where(
                     src.SubjectMedication.subject_study_arm_id ==
@@ -94,7 +111,7 @@ def main() -> None:
                 for src_med in meds:
                     dst_med = create_subject_medication(
                         src_med, dst_ssa, dst_subject_id)
-                    print(f'\t\t\tMED {j}: {dst_med.drug.name}')
+                    print(f'\t\t\tMED: {dst_med.drug.name}')
 
                 visits = src.SubjectVisit.select().where(
                     src.SubjectVisit.subject_study_arm_id ==
@@ -102,7 +119,23 @@ def main() -> None:
 
                 for src_visit in visits:
                     dst_visit = create_subject_visit(src_visit, dst_ssa)
-                    print(f'\t\t\tVISIT {j}: {dst_visit.code}')
+                    print(f'\t\t\tVISIT: {dst_visit.code}')
+
+                    adas_cogs = src.AdasCog.select().where(
+                        src.AdasCog.subject_visit_id ==
+                        src_visit.subject_visit_id)
+
+                    for src_adas_cog in adas_cogs:
+                        dst_adas_cog = create_adas_cog(src_adas_cog, dst_visit)
+                        print(f'\t\t\t\tADAS COG: '
+                              f'{dst_adas_cog.adas_cog_id}')
+
+                    cdrs = src.Cdr.select().where(
+                        src.Cdr.subject_visit_id == src_visit.subject_visit_id)
+
+                    for src_cdr in cdrs:
+                        dst_cdr = create_cdr(src_cdr, dst_visit)
+                        print(f'\t\t\t\tCDR: ' f'{dst_cdr.cdr_id}')
 
                     vitals = src.VisitVitals.select().where(
                         src.VisitVitals.subject_visit_id ==
@@ -110,7 +143,7 @@ def main() -> None:
 
                     for src_vital in vitals:
                         dst_vital = create_visit_vital(src_vital, dst_visit)
-                        print(f'\t\t\t\tVITALS {j}: '
+                        print(f'\t\t\t\tVITALS: '
                               f'{dst_vital.visit_vitals_id}')
 
                     mmse = src.Mmse.select().where(src.Mmse.subject_visit_id ==
@@ -118,7 +151,7 @@ def main() -> None:
 
                     for src_mmse in mmse:
                         dst_mmse = create_mmse(src_mmse, dst_visit)
-                        print(f'\t\t\t\tMMSE {j}: ' f'{dst_mmse.mmse_id}')
+                        print(f'\t\t\t\tMMSE: ' f'{dst_mmse.mmse_id}')
 
                     lab_results = src.LabResult.select().where(
                         src.LabResult.subject_visit_id ==
@@ -126,7 +159,7 @@ def main() -> None:
 
                     for src_lab_result in lab_results:
                         dst_lab = create_lab_result(src_lab_result, dst_visit)
-                        print(f'\t\t\t\tLAB {j}: ' f'{dst_lab.result}')
+                        print(f'\t\t\t\tLAB: ' f'{dst_lab.result}')
 
     print('Done.')
 
@@ -175,6 +208,47 @@ def create_subject_study_arm(src_ssa, dst_subject_id, dst_study_arm, count):
         record_num=src_ssa.record_num)
 
     return dst_ssa
+
+
+# --------------------------------------------------
+def create_alzheimer_history(src_az_hist, dst_ssa, dst_subject_id):
+    """ Create alzheimer history """
+
+    dst_az_hist, _ = dst.AlzheimerHistory.get_or_create(
+        alzheimer_history_id=src_az_hist.alzheimer_history_id,
+        subject_study_arm_id=dst_ssa.subject_study_arm_id,
+        alzheimer_stage_id=src_az_hist.alzheimer_stage_id,
+        subject_id=dst_subject_id,
+        diagnosis=src_az_hist.diagnosis,
+        diagnosis_offset=src_az_hist.diagnosis_offset,
+        tier_level=src_az_hist.tier_level,
+        file_version=src_az_hist.file_version,
+        project_file_id=src_az_hist.project_file_id,
+        removed=src_az_hist.removed,
+        batch_id=src_az_hist.batch_id,
+        record_num=src_az_hist.record_num)
+
+    return dst_az_hist
+
+
+# --------------------------------------------------
+def create_subject_disposition(src_disp, dst_ssa):
+    """ Create a subject disposition """
+
+    dst_disp, _ = dst.SubjectDisposition.get_or_create(
+        subject_disposition_id=src_disp.subject_disposition_id,
+        subject_study_arm_id=dst_ssa.subject_study_arm_id,
+        category=src_disp.category,
+        disposition=src_disp.disposition,
+        study_phase=src_disp.study_phase,
+        tier_level=src_disp.tier_level,
+        file_version=src_disp.file_version,
+        project_file_id=src_disp.project_file_id,
+        removed=src_disp.removed,
+        batch_id=src_disp.batch_id,
+        record_num=src_disp.record_num)
+
+    return dst_disp
 
 
 # --------------------------------------------------
@@ -228,6 +302,68 @@ def create_subject_visit(src_visit, dst_ssa):
         record_num=src_visit.record_num)
 
     return dst_med
+
+
+# --------------------------------------------------
+def create_adas_cog(src_adas_cog, dst_visit):
+    """ Create adas_cog """
+
+    dst_adas_cog, _ = dst.AdasCog.get_or_create(
+        adas_cog_id=src_adas_cog.adas_cog_id,
+        subject_visit_id=dst_visit.subject_visit_id,
+        word_recall=src_adas_cog.word_recall,
+        commands=src_adas_cog.commands,
+        constructional_praxis=src_adas_cog.constructional_praxis,
+        delay_word_recall=src_adas_cog.delay_word_recall,
+        name_obj_fingers=src_adas_cog.name_obj_fingers,
+        ideational_praxis=src_adas_cog.ideational_praxis,
+        orientation=src_adas_cog.orientation,
+        word_recognition=src_adas_cog.word_recognition,
+        remember_instructions=src_adas_cog.remember_instructions,
+        spoken_lang_ability=src_adas_cog.spoken_lang_ability,
+        word_find_difficulty=src_adas_cog.word_find_difficulty,
+        comprehension=src_adas_cog.comprehension,
+        maze_task=src_adas_cog.maze_task,
+        number_cancellation=src_adas_cog.number_cancellation,
+        concentration_distract=src_adas_cog.concentration_distract,
+        score_11_item=src_adas_cog.score_11_item,
+        derived_code=src_adas_cog.derived_code,
+        derived_data=src_adas_cog.derived_data,
+        tier_level=src_adas_cog.tier_level,
+        file_version=src_adas_cog.file_version,
+        project_file_id=src_adas_cog.project_file_id,
+        removed=src_adas_cog.removed,
+        batch_id=src_adas_cog.batch_id,
+        record_num=src_adas_cog.record_num)
+
+    return dst_adas_cog
+
+
+# --------------------------------------------------
+def create_cdr(src_cdr, dst_visit):
+    """ Create cdr """
+
+    dst_cdr, _ = dst.Cdr.get_or_create(
+        cdr_id=src_cdr.cdr_id,
+        subject_visit_id=dst_visit.subject_visit_id,
+        memory=src_cdr.memory,
+        orientation=src_cdr.orientation,
+        judge_prob_solving=src_cdr.judge_prob_solving,
+        community_affairs=src_cdr.community_affairs,
+        home_hobbies=src_cdr.home_hobbies,
+        personal_care=src_cdr.personal_care,
+        global_score=src_cdr.global_score,
+        derived_gs=src_cdr.derived_gs,
+        sum_of_boxes=src_cdr.sum_of_boxes,
+        derived_sb=src_cdr.derived_sb,
+        tier_level=src_cdr.tier_level,
+        file_version=src_cdr.file_version,
+        project_file_id=src_cdr.project_file_id,
+        removed=src_cdr.removed,
+        batch_id=src_cdr.batch_id,
+        record_num=src_cdr.record_num)
+
+    return dst_cdr
 
 
 # --------------------------------------------------
