@@ -282,7 +282,7 @@ def create_subject_medication(src_med, dst_ssa, dst_subject_id):
 def create_subject_visit(src_visit, dst_ssa):
     """ Create a subject visit """
 
-    dst_med, _ = dst.SubjectVisit.get_or_create(
+    dst_visit, _ = dst.SubjectVisit.get_or_create(
         subject_visit_id=src_visit.subject_visit_id,
         subject_study_arm_id=dst_ssa.subject_study_arm_id,
         ad_stage_id=src_visit.ad_stage_id,
@@ -301,7 +301,7 @@ def create_subject_visit(src_visit, dst_ssa):
         batch_id=src_visit.batch_id,
         record_num=src_visit.record_num)
 
-    return dst_med
+    return dst_visit
 
 
 # --------------------------------------------------
@@ -425,7 +425,7 @@ def create_mmse(src_mmse, dst_visit):
 def create_lab_result(src_lab_result, dst_visit):
     """ Create Lab Result """
 
-    dst_lab, _ = dst.LabResult.get_or_create(
+    dst_lab_result, _ = dst.LabResult.get_or_create(
         lab_result_id=src_lab_result.lab_result_id,
         subject_visit_id=dst_visit.subject_visit_id,
         lab_test_id=src_lab_result.lab_test_id,
@@ -441,7 +441,7 @@ def create_lab_result(src_lab_result, dst_visit):
         batch_id=src_lab_result.batch_id,
         record_num=src_lab_result.record_num)
 
-    return dst_lab
+    return dst_lab_result
 
 
 # --------------------------------------------------
