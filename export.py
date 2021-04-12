@@ -196,9 +196,9 @@ def create_subject_study_arm(src_ssa, dst_subject_id, dst_study_arm, count):
         subject_study_arm_id=src_ssa.subject_study_arm_id,
         study_arm_id=dst_study_arm.study_arm_id,
         subject_id=dst_subject_id,
-        patient_code=f'PT {count:05}',
+        patient_code=f'PT {count:05}',  # Noise
         study_seq_num=src_ssa.study_seq_num,
-        age=op(src_ssa.age, random.randint(1, 5)),  # noise
+        age=op(src_ssa.age, random.randint(1, 5)),  # Noise
         study_entry_offset=src_ssa.study_entry_offset,
         tier_level=src_ssa.tier_level,
         file_version=src_ssa.file_version,
@@ -267,7 +267,7 @@ def create_subject_medication(src_med, dst_ssa, dst_subject_id):
         stop_offset=src_med.stop_offset,
         stop_ref=src_med.stop_ref,
         reported_name=src_med.reported_name,
-        dose=src_med.dose,  # noise?
+        dose=src_med.dose,  # Add noise?
         tier_level=src_med.tier_level,
         file_version=src_med.file_version,
         project_file_id=src_med.project_file_id,
@@ -290,7 +290,7 @@ def create_subject_visit(src_visit, dst_ssa):
         code=src_visit.code,
         code2=src_visit.code2,
         description=src_visit.description,
-        duration=src_visit.duration,  # noise?
+        duration=src_visit.duration,  # Add noise?
         time_unit_id=src_visit.time_unit_id,
         visit_type=src_visit.visit_type,
         visit_sequence=src_visit.visit_sequence,
@@ -450,7 +450,7 @@ def create_study(src_study, study_id):
 
     dst_study, _ = dst.Study.get_or_create(
         study_id=study_id,
-        name=f'S{study_id:03d}',
+        name=f'S{study_id:03d}',  # Noise
         duration=src_study.duration,
         time_unit_id=src_study.time_unit_id,
         type=src_study.type,
@@ -474,7 +474,7 @@ def create_study_arm(src_study_arm, dst_study, count):
         batch_id=src_study_arm.batch_id,
         arm_id=src_study_arm.arm_id,
         country_id=src_study_arm.country_id,
-        description=f'ARM {count:03}',
+        description=f'ARM {count:03}',  # Noise
         tier_level=src_study_arm.tier_level,
         file_version=src_study_arm.file_version,
         project_file_id=src_study_arm.project_file_id,
